@@ -7,20 +7,20 @@ Project Overview
 This project helps users understand why a transaction was predicted as fraud or non-fraud using model-agnostic explainability techniques.
 
 It Supports:
- Fraud Prediction
- SHAP Explanations
- LIME Explanations
- Interactive Frontend Interface
- FastAPI Backend
+ Fraud Prediction,
+ SHAP Explanations,
+ LIME Explanations,
+ Interactive Frontend Interface,
+ FastAPI Backend,
 
 Technologies Used:
- Python
- FastAPI
- SHAP
- LIME
- Machine Learning (Scikit-learn)
- HTML / CSS / JavaScript
- Uvicorn
+ Python,
+ FastAPI,
+ SHAP,
+ LIME,
+ Machine Learning (Scikit-learn),
+ HTML / CSS / JavaScript,
+ Uvicorn,
  
 <img width="1916" height="940" alt="image" src="https://github.com/user-attachments/assets/6e17e5fe-a5f2-4c49-841c-67f0cd678881" />
 
