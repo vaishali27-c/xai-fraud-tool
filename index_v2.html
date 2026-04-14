@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>XAI Fraud Detection v2 — Advanced Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#080c10;--surface:#0d1117;--surface2:#161b22;--surface3:#21262d;
+  --border:#30363d;--text:#e6edf3;--muted:#7d8590;
+  --accent:#f78166;--accent2:#79c0ff;--accent3:#56d364;
+  --warn:#d29922;--danger:#f85149;--safe:#3fb950;--purple:#bc8cff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(48,54,61,0.3) 1px,transparent 1px),linear-gradient(90deg,rgba(48,54,61,0.3) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;}
+#root{position:relative;z-index:1;}
+.shell{max-width:1440px;margin:0 auto;padding:24px;}
+.header{display:flex;align-items:center;gap:16px;padding:20px 0 28px;border-bottom:1px solid var(--border);margin-bottom:28px;}
+.header-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.header-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.5px;}
+.header-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.hbadge{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.badge{padding:4px 12px;border-radius:20px;border:1px solid var(--border);font-size:10px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.dot{width:6px;height:6px;border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.tabs{display:flex;gap:2px;margin-bottom:24px;background:var(--surface2);padding:4px;border-radius:10px;border:1px solid var(--border);width:fit-content;flex-wrap:wrap;}
+.tab{padding:8px 16px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:0.06em;transition:all 0.2s;color:var(--muted);background:transparent;border:none;font-family:'JetBrains Mono',monospace;}
+.tab:hover{color:var(--text);}
+.tab.active{background:var(--surface3);color:var(--text);border:1px solid var(--border);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.card-title{font-size:10px;letter-spacing:0.15em;color:var(--muted);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.grid-main{display:grid;grid-template-columns:360px 1fr;gap:20px;}
+@media(max-width:900px){.grid-main,.grid2,.grid3,.grid4{grid-template-columns:1fr;}}
+.form-group{margin-bottom:13px;}
+label{font-size:10px;letter-spacing:0.1em;color:var(--muted);display:block;margin-bottom:5px;}
+input,select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border-color 0.2s;}
+input:focus,select:focus{border-color:var(--accent2);}
+select option{background:var(--surface2);}
+.btn{padding:10px 18px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;letter-spacing:0.05em;display:inline-flex;align-items:center;gap:7px;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#e06b56;transform:translateY(-1px);}
+.btn-secondary{background:var(--surface3);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{border-color:var(--accent2);}
+.btn-purple{background:rgba(188,140,255,0.15);color:var(--purple);border:1px solid rgba(188,140,255,0.3);}
+.btn-purple:hover{background:rgba(188,140,255,0.25);}
+.btn-green{background:rgba(63,185,80,0.15);color:var(--safe);border:1px solid rgba(63,185,80,0.3);}
+.btn-green:hover{background:rgba(63,185,80,0.25);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.risk-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.1em;}
+.risk-HIGH{background:rgba(248,81,73,0.15);color:var(--danger);border:1px solid rgba(248,81,73,0.3);}
+.risk-MEDIUM{background:rgba(210,153,34,0.15);color:var(--warn);border:1px solid rgba(210,153,34,0.3);}
+.risk-LOW{background:rgba(63,185,80,0.15);color:var(--safe);border:1px solid rgba(63,185,80,0.3);}
+
+/* ── FEATURE 3: Confidence Gauge ── */
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:10px 0;}
+.gauge-svg{overflow:visible;}
+.gauge-label{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;text-anchor:middle;dominant-baseline:middle;}
+.gauge-sub{font-size:11px;text-anchor:middle;fill:var(--muted);}
+
+/* ── FEATURE 4: SHAP Waterfall ── */
+.waterfall-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;position:relative;}
+.wf-label{font-size:10px;color:var(--muted);width:120px;flex-shrink:0;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wf-track{flex:1;height:22px;position:relative;}
+.wf-bar{position:absolute;height:100%;border-radius:3px;display:flex;align-items:center;padding:0 6px;font-size:9px;font-weight:600;transition:all 0.8s cubic-bezier(0.34,1.56,0.64,1);}
+.wf-val{font-size:10px;width:64px;text-align:left;flex-shrink:0;}
+
+/* LIME chart */
+.lime-item{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:11px;}
+.lime-feat{flex:1;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;}
+.lime-bar-wrap{width:90px;height:14px;background:var(--surface3);border-radius:3px;overflow:hidden;flex-shrink:0;}
+.lime-bar-inner{height:100%;border-radius:3px;transition:width 0.6s ease;}
+.lime-weight{font-weight:600;font-size:10px;min-width:60px;text-align:right;}
+
+/* ── FEATURE 5: Counterfactual ── */
+.cf-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;transition:border-color 0.2s;}
+.cf-card:hover{border-color:var(--accent2);}
+.cf-change{font-size:12px;color:var(--text);margin-bottom:8px;line-height:1.5;}
+.cf-meta{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.cf-arrow{display:flex;align-items:center;gap:6px;font-size:11px;}
+.cf-reduction{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(63,185,80,0.1);color:var(--safe);border:1px solid rgba(63,185,80,0.3);}
+
+/* ── FEATURE 1: Batch Upload ── */
+.drop-zone{border:2px dashed var(--border);border-radius:10px;padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--accent2);background:rgba(121,192,255,0.05);}
+.batch-result-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid rgba(48,54,61,0.4);font-size:11px;}
+.batch-result-row:hover{background:var(--surface2);}
+
+/* Stats */
+.stat-card{text-align:center;padding:16px;}
+.stat-num{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;}
+.stat-label{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:0.1em;}
+.hist-table{width:100%;border-collapse:collapse;font-size:11px;}
+.hist-table th{text-align:left;padding:8px 12px;font-size:10px;color:var(--muted);letter-spacing:0.1em;border-bottom:1px solid var(--border);}
+.hist-table td{padding:9px 12px;border-bottom:1px solid rgba(48,54,61,0.4);}
+.hist-table tr:hover td{background:var(--surface2);}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.fade-in{animation:fadeIn 0.4s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.error-box{background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.3);border-radius:8px;padding:12px 16px;font-size:11px;color:var(--danger);margin-bottom:14px;}
+.info-box{background:rgba(121,192,255,0.08);border:1px solid rgba(121,192,255,0.3);border-radius:8px;padding:12px 16px;font-size:11px;color:var(--accent2);}
+.tag{font-size:9px;padding:2px 7px;border-radius:4px;background:var(--surface3);border:1px solid var(--border);color:var(--muted);}
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
+.gap{margin-top:16px;}
+.fi-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.fi-name{font-size:11px;width:140px;flex-shrink:0;}
+.fi-track{flex:1;height:16px;background:var(--surface3);border-radius:3px;overflow:hidden;}
+.fi-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width 0.8s ease;}
+.fi-val{font-size:10px;color:var(--muted);width:50px;text-align:right;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const API = "http://localhost:8000";
+
+const DEFAULT_TXN = {
+  step:1, type:"TRANSFER", amount:181.0,
+  oldbalanceOrg:181.0, newbalanceOrig:0.0,
+  oldbalanceDest:0.0, newbalanceDest:0.0, isFlaggedFraud:0
+};
+
+async function apiCall(path, body=null, method="POST"){
+  const opts={method,headers:{"Content-Type":"application/json"}};
+  if(body) opts.body=JSON.stringify(body);
+  const r=await fetch(API+path,opts);
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||`HTTP ${r.status}`);}
+  return r.json();
+}
+
+// ── FEATURE 3: Animated Confidence Gauge ──────────────────────────────────────
+function ConfidenceGauge({prob, riskLevel}){
+  const pct = prob ?? 0;
+  const angle = -140 + pct * 280;
+  const color = riskLevel==="HIGH"?"#f85149":riskLevel==="MEDIUM"?"#d29922":"#3fb950";
+  const r=70, cx=100, cy=100;
+  const startAngle=-140, endAngle=-140+pct*280;
+  const toRad=d=>d*Math.PI/180;
+  const arcPath=(sa,ea,R)=>{
+    const x1=cx+R*Math.cos(toRad(sa)), y1=cy+R*Math.sin(toRad(sa));
+    const x2=cx+R*Math.cos(toRad(ea)), y2=cy+R*Math.sin(toRad(ea));
+    const large=Math.abs(ea-sa)>180?1:0;
+    return `M${x1},${y1} A${R},${R},0,${large},1,${x2},${y2}`;
+  };
+  const nx=cx+r*Math.cos(toRad(endAngle)), ny=cy+r*Math.sin(toRad(endAngle));
+  return(
+    <div className="gauge-wrap">
+      <svg width="200" height="130" className="gauge-svg" viewBox="0 0 200 130">
+        <path d={arcPath(-140,140,r)} fill="none" stroke="var(--surface3)" strokeWidth="12" strokeLinecap="round"/>
+        {pct>0 && <path d={arcPath(startAngle,endAngle,r)} fill="none" stroke={color} strokeWidth="12" strokeLinecap="round" opacity="0.9"/>}
+        <circle cx={nx} cy={ny} r="6" fill={color}/>
+        <text x={cx} y={cy-4} textAnchor="middle" dominantBaseline="middle"
+          style={{fill:color,fontFamily:"'Syne',sans-serif",fontSize:28,fontWeight:800}}>
+          {Math.round(pct*100)}%
+        </text>
+        <text x={cx} y={cy+20} textAnchor="middle" style={{fill:"var(--muted)",fontSize:10,fontFamily:"'JetBrains Mono',monospace"}}>
+          FRAUD PROBABILITY
+        </text>
+        <text x="30" y="115" style={{fill:"var(--muted)",fontSize:9,fontFamily:"'JetBrains Mono',monospace"}}>0%</text>
+        <text x="160" y="115" style={{fill:"var(--muted)",fontSize:9,fontFamily:"'JetBrains Mono',monospace"}}>100%</text>
+      </svg>
+    </div>
+  );
+}
+
+// ── FEATURE 4: SHAP Waterfall Chart ───────────────────────────────────────────
+function ShapWaterfall({contributions, baseValue}){
+  if(!contributions?.length) return null;
+  const top=contributions.slice(0,8);
+  const maxAbs=Math.max(...top.map(c=>Math.abs(c.shap_value)),0.001);
+  return(
+    <div>
+      <div style={{fontSize:10,color:"var(--muted)",marginBottom:12}}>
+        Base value: <span style={{color:"var(--accent2)"}}>{baseValue?.toFixed(4)}</span>
+        <span style={{marginLeft:16}}>← Each bar shows how a feature pushes the score →</span>
+      </div>
+      {top.map((c,i)=>{
+        const isPos=c.shap_value>0;
+        const color=isPos?"var(--danger)":"var(--safe)";
+        const barW=Math.abs(c.shap_value)/maxAbs*42;
+        const leftPct=isPos?50:50-barW;
+        return(
+          <div className="waterfall-row" key={i}>
+            <div className="wf-label" title={c.feature}>{c.feature}</div>
+            <div className="wf-track" style={{background:"var(--surface3)",borderRadius:3,height:22,position:"relative"}}>
+              <div style={{position:"absolute",left:"50%",top:0,bottom:0,width:1,background:"var(--border)"}}/>
+              <div className="wf-bar" style={{
+                left:`${leftPct}%`, width:`${barW}%`,
+                background:isPos?"rgba(248,81,73,0.25)":"rgba(63,185,80,0.25)",
+                border:`1px solid ${color}`,color,
+                justifyContent:isPos?"flex-start":"flex-end"
+              }}>
+                <span style={{fontSize:9}}>{isPos?"+":""}{c.shap_value.toFixed(3)}</span>
+              </div>
+            </div>
+            <div style={{fontSize:10,color:"var(--muted)",width:70,flexShrink:0}}>
+              val: {c.feature_value}
+            </div>
+          </div>
+        );
+      })}
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"var(--muted)",marginTop:8}}>
+        <span style={{color:"var(--safe)"}}>← Reduces fraud risk</span>
+        <span style={{color:"var(--danger)"}}>Increases fraud risk →</span>
+      </div>
+    </div>
+  );
+}
+
+function LimeChart({contributions}){
+  if(!contributions?.length) return null;
+  const maxAbs=Math.max(...contributions.map(c=>Math.abs(c.lime_weight)),0.001);
+  return(
+    <div>
+      {contributions.map((c,i)=>{
+        const isPos=c.lime_weight>0;
+        const color=isPos?"var(--danger)":"var(--safe)";
+        const barPct=Math.abs(c.lime_weight)/maxAbs*100;
+        return(
+          <div className="lime-item" key={i}>
+            <div className="lime-feat" title={c.feature}>{c.feature}</div>
+            <div className="lime-bar-wrap">
+              <div className="lime-bar-inner" style={{width:`${barPct}%`,background:color+"aa"}}/>
+            </div>
+            <div className="lime-weight" style={{color}}>{isPos?"+":""}{c.lime_weight.toFixed(4)}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── FEATURE 5: Counterfactual Panel ───────────────────────────────────────────
+function CounterfactualPanel({transaction}){
+  const [data,setData]=React.useState(null);
+  const [loading,setLoading]=React.useState(false);
+  const [error,setError]=React.useState(null);
+
+  const run=async()=>{
+    setLoading(true);setError(null);
+    try{const d=await apiCall("/explain/counterfactual",transaction);setData(d);}
+    catch(e){setError(e.message);}
+    setLoading(false);
+  };
+
+  return(
+    <div>
+      <div style={{fontSize:12,color:"var(--muted)",marginBottom:14,lineHeight:1.7}}>
+        Counterfactual explanations answer: <span style={{color:"var(--text)"}}>"What would need to change to make this transaction SAFE?"</span>
+      </div>
+      <button className="btn btn-purple" onClick={run} disabled={loading}>
+        {loading?<><div className="spinner"/>Generating...</>:<>🔮 Generate Counterfactuals</>}
+      </button>
+      {error && <div className="error-box gap">{error}</div>}
+      {data && (
+        <div className="gap fade-in">
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+            <span className={`risk-badge risk-${data.original_risk}`}>Original: {Math.round(data.original_probability*100)}%</span>
+            {data.already_safe && <span className="info-box" style={{padding:"4px 12px",borderRadius:20}}>{data.message}</span>}
+          </div>
+          {data.counterfactuals.map((cf,i)=>(
+            <div className="cf-card" key={i}>
+              <div style={{display:"flex",alignItems:"flex-start",gap:8,marginBottom:8}}>
+                <span style={{color:"var(--accent2)",fontSize:14,flexShrink:0}}>
+                  {cf.new_risk==="LOW"?"✅":cf.new_risk==="MEDIUM"?"◈":"⚠"}
+                </span>
+                <div className="cf-change">{cf.change}</div>
+              </div>
+              <div className="cf-meta">
+                <div className="cf-arrow">
+                  <span style={{color:"var(--danger)"}}>{Math.round(data.original_probability*100)}%</span>
+                  <span style={{color:"var(--muted)"}}>→</span>
+                  <span style={{color:cf.new_risk==="HIGH"?"var(--danger)":cf.new_risk==="MEDIUM"?"var(--warn)":"var(--safe)"}}>
+                    {Math.round(cf.new_probability*100)}%
+                  </span>
+                </div>
+                <span className={`risk-badge risk-${cf.new_risk}`} style={{fontSize:9}}>{cf.new_risk} RISK</span>
+                <span className="cf-reduction">↓ {cf.reduction}% reduction</span>
+              </div>
+            </div>
+          ))}
+          {!data.already_safe && data.counterfactuals.length===0 &&
+            <div className="info-box">No simple counterfactuals found for this transaction pattern.</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── FEATURE 1: Batch CSV Upload ────────────────────────────────────────────────
+function BatchUploadTab(){
+  const [drag,setDrag]=React.useState(false);
+  const [loading,setLoading]=React.useState(false);
+  const [result,setResult]=React.useState(null);
+  const [error,setError]=React.useState(null);
+  const fileRef=React.useRef();
+
+  const processFile=async(file)=>{
+    if(!file||!file.name.endsWith(".csv")){setError("Please upload a CSV file");return;}
+    setLoading(true);setError(null);setResult(null);
+    try{
+      const fd=new FormData();fd.append("file",file);
+      const r=await fetch(API+"/batch/upload-csv",{method:"POST",body:fd});
+      if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||"Upload failed");}
+      setResult(await r.json());
+    }catch(e){setError(e.message);}
+    setLoading(false);
+  };
+
+  const onDrop=e=>{e.preventDefault();setDrag(false);processFile(e.dataTransfer.files[0]);};
+
+  // Download results as CSV
+  const downloadCSV=()=>{
+    if(!result) return;
+    const header="Row,Type,Amount,Fraud Probability,Risk Level,Is Fraud\n";
+    const rows=result.results.map(r=>`${r.row},${r.type},${r.amount},${r.fraud_probability},${r.risk_level},${r.is_fraud}`).join("\n");
+    const blob=new Blob([header+rows],{type:"text/csv"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+    a.download="fraud_analysis_results.csv";a.click();
+  };
+
+  return(
+    <div>
+      {!result && (
+        <div className="card" style={{marginBottom:16}}>
+          <div className="card-title">Upload Transaction CSV</div>
+          <div className={`drop-zone ${drag?"drag":""}`}
+            onDragOver={e=>{e.preventDefault();setDrag(true);}}
+            onDragLeave={()=>setDrag(false)}
+            onDrop={onDrop}
+            onClick={()=>fileRef.current.click()}>
+            <input type="file" accept=".csv" ref={fileRef} style={{display:"none"}}
+              onChange={e=>processFile(e.target.files[0])}/>
+            {loading?<><div className="spinner" style={{margin:"0 auto 12px"}}/><div style={{fontSize:12,color:"var(--muted)"}}>Analyzing transactions...</div></>
+            :<>
+              <div style={{fontSize:32,marginBottom:12}}>📂</div>
+              <div style={{fontFamily:"Syne",fontSize:15,color:"var(--text)",marginBottom:6}}>Drop CSV file here</div>
+              <div style={{fontSize:11,color:"var(--muted)"}}>or click to browse · max 500 rows</div>
+              <div style={{fontSize:10,color:"var(--muted)",marginTop:8}}>
+                Required columns: step, type, amount, oldbalanceOrg, newbalanceOrig, oldbalanceDest, newbalanceDest
+              </div>
+            </>}
+          </div>
+          {error && <div className="error-box gap">{error}</div>}
+          <div className="gap info-box">
+            💡 Use your <strong>PS_20174392719_1491204439457_log.csv</strong> dataset or any CSV with the required columns.
+          </div>
+        </div>
+      )}
+
+      {result && (
+        <div className="fade-in">
+          <div className="grid4" style={{marginBottom:16}}>
+            {[
+              {n:result.summary.total_transactions,l:"TOTAL ANALYZED",c:"var(--accent2)"},
+              {n:result.summary.fraud_detected,l:"FRAUD DETECTED",c:"var(--danger)"},
+              {n:`${result.summary.fraud_percentage}%`,l:"FRAUD RATE",c:"var(--warn)"},
+              {n:`${Math.round(result.summary.average_fraud_probability*100)}%`,l:"AVG RISK SCORE",c:"var(--purple)"},
+            ].map((s,i)=>(
+              <div className="card stat-card" key={i}>
+                <div className="stat-num" style={{color:s.c}}>{s.n}</div>
+                <div className="stat-label">{s.l}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid2" style={{marginBottom:16}}>
+            <div className="card">
+              <div className="card-title">Fraud by Transaction Type</div>
+              {Object.entries(result.type_breakdown).map(([type,data])=>(
+                <div key={type} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                  <div style={{width:80,fontSize:11,flexShrink:0}}>{type}</div>
+                  <div style={{flex:1,height:20,background:"var(--surface3)",borderRadius:3,overflow:"hidden",position:"relative"}}>
+                    <div style={{height:"100%",width:`${data.total/result.summary.total_transactions*100}%`,background:"rgba(121,192,255,0.3)",borderRadius:3}}/>
+                    <div style={{position:"absolute",top:0,left:0,height:"100%",width:`${data.fraud/data.total*100}%`,background:"rgba(248,81,73,0.5)",borderRadius:3}}/>
+                  </div>
+                  <div style={{fontSize:10,color:"var(--muted)",width:90,flexShrink:0}}>
+                    {data.fraud}/{data.total} fraud
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="card">
+              <div className="card-title">Risk Distribution</div>
+              {["HIGH","MEDIUM","LOW"].map(level=>{
+                const count=result.results.filter(r=>r.risk_level===level).length;
+                const pct=count/result.results.length*100;
+                const color=level==="HIGH"?"var(--danger)":level==="MEDIUM"?"var(--warn)":"var(--safe)";
+                return(
+                  <div key={level} style={{marginBottom:12}}>
+                    <div style={{display:"flex",justifyContent:"space-between",fontSize:10,marginBottom:4}}>
+                      <span style={{color}}>{level} RISK</span>
+                      <span style={{color:"var(--muted)"}}>{count} ({pct.toFixed(1)}%)</span>
+                    </div>
+                    <div style={{height:12,background:"var(--surface3)",borderRadius:6,overflow:"hidden"}}>
+                      <div style={{height:"100%",width:`${pct}%`,background:color,borderRadius:6,transition:"width 0.8s ease"}}/>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-title">Transaction Results
+              <div style={{marginLeft:"auto",display:"flex",gap:8}}>
+                <button className="btn btn-green" onClick={downloadCSV}>⬇ Export CSV</button>
+                <button className="btn btn-secondary" onClick={()=>setResult(null)}>↩ New Upload</button>
+              </div>
+            </div>
+            <div style={{maxHeight:350,overflowY:"auto"}}>
+              <table className="hist-table">
+                <thead><tr>
+                  <th>#</th><th>TYPE</th><th>AMOUNT</th><th>FRAUD PROB</th><th>RISK</th>
+                </tr></thead>
+                <tbody>
+                  {result.results.map(r=>(
+                    <tr key={r.row}>
+                      <td style={{color:"var(--muted)"}}>{r.row}</td>
+                      <td>{r.type}</td>
+                      <td>₹{r.amount.toLocaleString()}</td>
+                      <td style={{color:r.risk_level==="HIGH"?"var(--danger)":r.risk_level==="MEDIUM"?"var(--warn)":"var(--safe)"}}>
+                        {Math.round(r.fraud_probability*100)}%
+                      </td>
+                      <td><span className={`risk-badge risk-${r.risk_level}`} style={{fontSize:9}}>{r.risk_level}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── FEATURE 2: PDF Report ─────────────────────────────────────────────────────
+function downloadPDFReport(txn, result){
+  if(!result) return;
+  const {prediction, shap, lime} = result;
+  const prob=Math.round(prediction.fraud_probability*100);
+  const riskColor=prediction.risk_level==="HIGH"?"#f85149":prediction.risk_level==="MEDIUM"?"#d29922":"#3fb950";
+
+  const shapRows=shap.contributions.slice(0,8).map(c=>`
+    <tr>
+      <td style="padding:6px 10px;border-bottom:1px solid #21262d;font-family:monospace;font-size:12px">${c.feature}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #21262d;color:${c.shap_value>0?"#f85149":"#3fb950"};font-weight:bold;font-family:monospace;font-size:12px">
+        ${c.shap_value>0?"+":""}${c.shap_value.toFixed(5)}
+      </td>
+      <td style="padding:6px 10px;border-bottom:1px solid #21262d;font-family:monospace;font-size:12px">${c.feature_value}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #21262d;font-size:11px;color:#7d8590">${c.shap_value>0?"Increases fraud risk":"Reduces fraud risk"}</td>
+    </tr>`).join("");
+
+  const limeRows=lime.contributions.slice(0,8).map(c=>`
+    <tr>
+      <td style="padding:6px 10px;border-bottom:1px solid #21262d;font-family:monospace;font-size:12px">${c.feature}</td>
+      <td style="padding:6px 10px;border-bottom:1px solid #21262d;color:${c.lime_weight>0?"#f85149":"#3fb950"};font-weight:bold;font-family:monospace;font-size:12px">
+        ${c.lime_weight>0?"+":""}${c.lime_weight.toFixed(5)}
+      </td>
+    </tr>`).join("");
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+  <title>XAI Fraud Detection Report</title>
+  <style>
+    body{background:#fff;color:#111;font-family:'Segoe UI',sans-serif;padding:40px;max-width:900px;margin:0 auto;}
+    h1{font-size:24px;color:#111;margin-bottom:4px;}
+    h2{font-size:16px;color:#333;margin:28px 0 12px;border-bottom:2px solid #f0f0f0;padding-bottom:6px;}
+    .badge{display:inline-block;padding:6px 18px;border-radius:20px;font-weight:bold;font-size:14px;color:#fff;background:${riskColor};}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+    .box{background:#f8f9fa;border-radius:8px;padding:16px;}
+    .box-title{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;}
+    .box-val{font-size:22px;font-weight:bold;}
+    table{width:100%;border-collapse:collapse;margin-top:8px;}
+    th{text-align:left;padding:8px 10px;background:#f0f0f0;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;}
+    .footer{margin-top:40px;padding-top:16px;border-top:1px solid #e0e0e0;font-size:11px;color:#999;display:flex;justify-content:space-between;}
+    .prob-bar{height:16px;background:#e9ecef;border-radius:8px;overflow:hidden;margin-top:8px;}
+    .prob-fill{height:100%;background:${riskColor};border-radius:8px;width:${prob}%;}
+    @media print{body{padding:20px;}}
+  </style></head><body>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px">
+    <div>
+      <h1>🔍 XAI Fraud Detection Report</h1>
+      <p style="color:#666;font-size:13px;margin-top:4px">Model-Agnostic Explainability Plug-in · SHAP + LIME Analysis</p>
+      <p style="color:#999;font-size:11px;margin-top:4px">Generated: ${new Date().toLocaleString()}</p>
+    </div>
+    <span class="badge">${prediction.risk_level} RISK</span>
+  </div>
+
+  <h2>Prediction Summary</h2>
+  <div class="grid">
+    <div class="box">
+      <div class="box-title">Fraud Probability</div>
+      <div class="box-val" style="color:${riskColor}">${prob}%</div>
+      <div class="prob-bar"><div class="prob-fill"></div></div>
+    </div>
+    <div class="box">
+      <div class="box-title">Risk Level</div>
+      <div class="box-val" style="color:${riskColor}">${prediction.risk_level}</div>
+      <div style="font-size:12px;color:#666;margin-top:6px">
+        ${prediction.risk_level==="HIGH"?"Immediate review required":prediction.risk_level==="MEDIUM"?"Manual verification recommended":"Transaction appears safe"}
+      </div>
+    </div>
+  </div>
+
+  <h2>Transaction Details</h2>
+  <div class="grid">
+    ${[["Step",txn.step],["Type",txn.type],["Amount","₹"+txn.amount.toLocaleString()],
+       ["Sender Bal. Before","₹"+txn.oldbalanceOrg.toLocaleString()],
+       ["Sender Bal. After","₹"+txn.newbalanceOrig.toLocaleString()],
+       ["Receiver Bal. Before","₹"+txn.oldbalanceDest.toLocaleString()]].map(([k,v])=>`
+    <div class="box"><div class="box-title">${k}</div><div style="font-size:16px;font-weight:600">${v}</div></div>`).join("")}
+  </div>
+
+  <h2>SHAP Explanation (Local)</h2>
+  <p style="font-size:12px;color:#666;margin-bottom:12px">SHapley Additive exPlanations — shows how each feature contributed to this prediction. Positive values increase fraud risk; negative values reduce it.</p>
+  <table><thead><tr><th>Feature</th><th>SHAP Value</th><th>Feature Value</th><th>Direction</th></tr></thead>
+  <tbody>${shapRows}</tbody></table>
+  <p style="font-size:11px;color:#999;margin-top:8px">Base value (average model output): ${shap.base_value?.toFixed(5)}</p>
+
+  <h2>LIME Explanation (Local)</h2>
+  <p style="font-size:12px;color:#666;margin-bottom:12px">Local Interpretable Model-agnostic Explanations — fits a linear model around this prediction point. Positive weight = increases fraud likelihood.</p>
+  <table><thead><tr><th>Feature Condition</th><th>Weight</th></tr></thead>
+  <tbody>${limeRows}</tbody></table>
+  <p style="font-size:11px;color:#999;margin-top:8px">Intercept: ${lime.intercept?.toFixed(5)}</p>
+
+  <h2>XAI Insight</h2>
+  <div style="background:#f8f9fa;border-left:4px solid ${riskColor};padding:16px;border-radius:0 8px 8px 0;font-size:13px;line-height:1.7">
+    ${prediction.risk_level==="HIGH"
+      ?`⚠ This transaction shows HIGH fraud probability (${prob}%). The most influential feature is "${shap.contributions?.[0]?.feature}" with a SHAP value of ${shap.contributions?.[0]?.shap_value?.toFixed(4)}, strongly indicating fraudulent UPI transfer patterns. Immediate manual review is recommended.`
+      :prediction.risk_level==="MEDIUM"
+      ?`◈ This transaction has MEDIUM risk (${prob}%). Mixed signals detected — some features push toward fraud while others reduce risk. Manual verification is recommended before processing.`
+      :`✓ This transaction appears SAFE (${prob}% fraud probability). Feature patterns are consistent with normal UPI activity. No immediate action required.`}
+  </div>
+
+  <div class="footer">
+    <span>XAI Fraud Detection Plug-in · SHAP + LIME · Model-Agnostic · v2.0.0</span>
+    <span>UPI Fraud Detection Project</span>
+  </div>
+  </body></html>`;
+
+  const blob=new Blob([html],{type:"text/html"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`fraud_report_${Date.now()}.html`;
+  a.click();
+}
+
+// ── Global FI Chart ───────────────────────────────────────────────────────────
+function GlobalFI({data}){
+  if(!data?.length) return null;
+  const max=data[0].importance;
+  return(<div>{data.map((f,i)=>(
+    <div className="fi-row" key={i}>
+      <div className="fi-name">{f.feature}</div>
+      <div className="fi-track"><div className="fi-fill" style={{width:`${(f.importance/max)*100}%`}}/></div>
+      <div className="fi-val">{(f.importance*100).toFixed(1)}%</div>
+    </div>
+  ))}</div>);
+}
+
+// ── MAIN APP ──────────────────────────────────────────────────────────────────
+function App(){
+  const [tab,setTab]=React.useState("analyze");
+  const [txn,setTxn]=React.useState(DEFAULT_TXN);
+  const [loading,setLoading]=React.useState(false);
+  const [result,setResult]=React.useState(null);
+  const [error,setError]=React.useState(null);
+  const [globalFI,setGlobalFI]=React.useState(null);
+  const [fiLoading,setFiLoading]=React.useState(false);
+  const [history,setHistory]=React.useState([]);
+  const [apiStatus,setApiStatus]=React.useState("checking");
+  const [analysisTab,setAnalysisTab]=React.useState("shap");
+
+  React.useEffect(()=>{
+    fetch(API+"/health").then(r=>r.json())
+      .then(d=>setApiStatus(d.model_loaded?"online":"no-model"))
+      .catch(()=>setApiStatus("offline"));
+  },[]);
+
+  React.useEffect(()=>{
+    if(tab==="global"&&!globalFI){
+      setFiLoading(true);
+      apiCall("/global/feature-importance",null,"GET")
+        .then(d=>setGlobalFI(d.feature_importances))
+        .catch(e=>console.error(e))
+        .finally(()=>setFiLoading(false));
+    }
+  },[tab]);
+
+  const handleChange=(k,v)=>setTxn(prev=>({...prev,[k]:v}));
+
+  const runAnalysis=async()=>{
+    setLoading(true);setError(null);setResult(null);
+    try{
+      const data=await apiCall("/explain/both",txn);
+      setResult(data);
+      setHistory(prev=>[{
+        id:Date.now(),time:new Date().toLocaleTimeString(),
+        amount:txn.amount,type:txn.type,
+        prob:data.prediction.fraud_probability,
+        risk:data.prediction.risk_level
+      },...prev.slice(0,9)]);
+    }catch(e){setError(e.message);}
+    setLoading(false);
+  };
+
+  const statusColor={online:"var(--safe)",offline:"var(--danger)",checking:"var(--warn)","no-model":"var(--warn)"};
+  const statusText={online:"API ONLINE",offline:"API OFFLINE",checking:"CONNECTING...","no-model":"MODEL NOT LOADED"};
+
+  return(
+    <div className="shell">
+      <div className="header">
+        <div className="header-icon">🔍</div>
+        <div>
+          <div className="header-title">XAI FRAUD DETECTOR <span style={{fontSize:12,color:"var(--purple)",marginLeft:8}}>v2.0</span></div>
+          <div className="header-sub">Model-Agnostic Explainability · SHAP · LIME · Counterfactual · Batch Analysis</div>
+        </div>
+        <div className="hbadge">
+          <div className="badge" style={{borderColor:statusColor[apiStatus]+"55"}}>
+            <div className="dot" style={{background:statusColor[apiStatus]}}/>
+            <span style={{color:statusColor[apiStatus]}}>{statusText[apiStatus]}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="tabs">
+        {[["analyze","⚡ ANALYZE"],["batch","📂 BATCH CSV"],["global","🌐 GLOBAL XAI"],["history","📋 HISTORY"]].map(([id,label])=>(
+          <button key={id} className={`tab ${tab===id?"active":""}`} onClick={()=>setTab(id)}>{label}</button>
+        ))}
+      </div>
+
+      {/* ── ANALYZE TAB ── */}
+      {tab==="analyze"&&(
+        <div className="grid-main">
+          <div>
+            <div className="card">
+              <div className="card-title">Transaction Input</div>
+              <div className="grid2">
+                <div className="form-group">
+                  <label>STEP</label>
+                  <input type="number" value={txn.step} onChange={e=>handleChange("step",+e.target.value)}/>
+                </div>
+                <div className="form-group">
+                  <label>TYPE</label>
+                  <select value={txn.type} onChange={e=>handleChange("type",e.target.value)}>
+                    {["TRANSFER","CASH_OUT","PAYMENT","CASH_IN","DEBIT"].map(t=><option key={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>AMOUNT (₹)</label>
+                <input type="number" value={txn.amount} onChange={e=>handleChange("amount",+e.target.value)}/>
+              </div>
+              <div className="grid2">
+                <div className="form-group">
+                  <label>SENDER BAL. BEFORE</label>
+                  <input type="number" value={txn.oldbalanceOrg} onChange={e=>handleChange("oldbalanceOrg",+e.target.value)}/>
+                </div>
+                <div className="form-group">
+                  <label>SENDER BAL. AFTER</label>
+                  <input type="number" value={txn.newbalanceOrig} onChange={e=>handleChange("newbalanceOrig",+e.target.value)}/>
+                </div>
+                <div className="form-group">
+                  <label>RECEIVER BAL. BEFORE</label>
+                  <input type="number" value={txn.oldbalanceDest} onChange={e=>handleChange("oldbalanceDest",+e.target.value)}/>
+                </div>
+                <div className="form-group">
+                  <label>RECEIVER BAL. AFTER</label>
+                  <input type="number" value={txn.newbalanceDest} onChange={e=>handleChange("newbalanceDest",+e.target.value)}/>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>IS FLAGGED FRAUD</label>
+                <select value={txn.isFlaggedFraud} onChange={e=>handleChange("isFlaggedFraud",+e.target.value)}>
+                  <option value={0}>0 — Not Flagged</option>
+                  <option value={1}>1 — Flagged</option>
+                </select>
+              </div>
+              <div className="btn-row">
+                <button className="btn btn-primary" onClick={runAnalysis} disabled={loading}>
+                  {loading?<><div className="spinner"/>ANALYZING...</>:<>⚡ RUN XAI ANALYSIS</>}
+                </button>
+              </div>
+              <div className="btn-row">
+                <button className="btn btn-secondary" onClick={()=>setTxn({step:1,type:"TRANSFER",amount:181,oldbalanceOrg:181,newbalanceOrig:0,oldbalanceDest:0,newbalanceDest:0,isFlaggedFraud:0})}>🚨 Fraud Sample</button>
+                <button className="btn btn-secondary" onClick={()=>setTxn({step:5,type:"PAYMENT",amount:1500,oldbalanceOrg:50000,newbalanceOrig:48500,oldbalanceDest:2000,newbalanceDest:3500,isFlaggedFraud:0})}>✅ Safe Sample</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            {error&&<div className="error-box">⚠ {error}<br/><small style={{opacity:0.7}}>Make sure backend is running at {API}</small></div>}
+
+            {!result&&!loading&&!error&&(
+              <div className="card" style={{textAlign:"center",padding:"60px 20px",color:"var(--muted)"}}>
+                <div style={{fontSize:48,marginBottom:16}}>🔎</div>
+                <div style={{fontFamily:"Syne",fontSize:16,color:"var(--text)",marginBottom:8}}>Ready to Analyze</div>
+                <div style={{fontSize:11}}>Fill transaction details and click Run XAI Analysis</div>
+                <div style={{marginTop:20,display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
+                  {["⚡ Prediction","📊 SHAP Waterfall","📊 LIME","🔮 Counterfactual","📄 PDF Report"].map(f=>(
+                    <span key={f} className="tag" style={{padding:"4px 10px",fontSize:10}}>{f}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {result&&(
+              <div className="fade-in">
+                {/* Top row: Gauge + Prediction */}
+                <div className="grid2" style={{marginBottom:16}}>
+                  <div className="card" style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+                    <ConfidenceGauge prob={result.prediction.fraud_probability} riskLevel={result.prediction.risk_level}/>
+                    <span className={`risk-badge risk-${result.prediction.risk_level}`} style={{marginTop:8}}>
+                      {result.prediction.risk_level==="HIGH"?"⚠":result.prediction.risk_level==="MEDIUM"?"◈":"✓"} {result.prediction.risk_level} RISK
+                    </span>
+                  </div>
+                  <div className="card">
+                    <div className="card-title">XAI Insight</div>
+                    <div style={{fontSize:12,lineHeight:1.8,marginBottom:14}}>
+                      {result.prediction.risk_level==="HIGH"
+                        ?`⚠ HIGH RISK (${Math.round(result.prediction.fraud_probability*100)}%). Key driver: "${result.shap.contributions?.[0]?.feature}" — pattern strongly associated with UPI fraud.`
+                        :result.prediction.risk_level==="MEDIUM"
+                        ?`◈ MEDIUM RISK (${Math.round(result.prediction.fraud_probability*100)}%). Mixed signals — review SHAP/LIME charts for details.`
+                        :`✓ LOW RISK (${Math.round(result.prediction.fraud_probability*100)}%). Patterns consistent with normal UPI activity.`}
+                    </div>
+                    <button className="btn btn-purple" onClick={()=>downloadPDFReport(txn,result)}>
+                      📄 Download PDF Report
+                    </button>
+                  </div>
+                </div>
+
+                {/* Analysis Sub-tabs */}
+                <div style={{display:"flex",gap:2,marginBottom:14,background:"var(--surface2)",padding:4,borderRadius:8,border:"1px solid var(--border)",width:"fit-content"}}>
+                  {[["shap","📊 SHAP Waterfall"],["lime","📊 LIME"],["cf","🔮 Counterfactual"]].map(([id,label])=>(
+                    <button key={id} className={`tab ${analysisTab===id?"active":""}`} onClick={()=>setAnalysisTab(id)} style={{fontSize:10}}>{label}</button>
+                  ))}
+                </div>
+
+                {analysisTab==="shap"&&(
+                  <div className="card fade-in">
+                    <div className="card-title">SHAP Waterfall Explanation <span className="tag" style={{marginLeft:4}}>local · tree explainer</span></div>
+                    <ShapWaterfall contributions={result.shap.contributions} baseValue={result.shap.base_value}/>
+                  </div>
+                )}
+                {analysisTab==="lime"&&(
+                  <div className="card fade-in">
+                    <div className="card-title">LIME Explanation <span className="tag" style={{marginLeft:4}}>local · model-agnostic</span></div>
+                    <div style={{fontSize:10,color:"var(--muted)",marginBottom:12}}>Intercept: <span style={{color:"var(--accent2)"}}>{result.lime.intercept?.toFixed(4)}</span></div>
+                    <LimeChart contributions={result.lime.contributions}/>
+                    <hr className="divider"/>
+                    <div style={{fontSize:10,color:"var(--muted)"}}>Positive weight → increases fraud likelihood · Negative → reduces it</div>
+                  </div>
+                )}
+                {analysisTab==="cf"&&(
+                  <div className="card fade-in">
+                    <div className="card-title">Counterfactual Explanation <span className="tag" style={{marginLeft:4}}>what-if analysis</span></div>
+                    <CounterfactualPanel transaction={txn}/>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── BATCH TAB ── */}
+      {tab==="batch"&&(
+        <div className="fade-in">
+          <BatchUploadTab/>
+        </div>
+      )}
+
+      {/* ── GLOBAL XAI TAB ── */}
+      {tab==="global"&&(
+        <div className="grid-main fade-in">
+          <div className="card">
+            <div className="card-title">About Global Explainability</div>
+            <div style={{fontSize:12,lineHeight:1.8,color:"var(--muted)"}}>
+              <p style={{marginBottom:12}}>Global explanations answer: <span style={{color:"var(--text)"}}>"Which features matter most overall?"</span></p>
+              <p style={{marginBottom:12}}>Derived from XGBoost's internal gain metric — how much each feature reduces impurity across all decision trees.</p>
+              <p style={{color:"var(--accent2)"}}>Global + local explanations together provide complete transparency into the fraud detection pipeline.</p>
+            </div>
+            <hr className="divider"/>
+            <div className="card-title">Feature Glossary</div>
+            {[["balanceDiffOrig","Amount drained from sender (key fraud signal)"],
+              ["balanceDiffDest","Amount received by recipient"],
+              ["amount","Transaction amount in ₹"],
+              ["newbalanceOrig","Sender's balance after transaction"],
+              ["type","Transaction type (TRANSFER, CASH_OUT, etc.)"],
+              ["isFlaggedFraud","System pre-flag for suspicious activity"]
+            ].map(([k,v])=>(
+              <div key={k} style={{display:"flex",gap:12,marginBottom:8,fontSize:11}}>
+                <span style={{color:"var(--accent2)",width:140,flexShrink:0}}>{k}</span>
+                <span style={{color:"var(--muted)"}}>{v}</span>
+              </div>
+            ))}
+          </div>
+          <div className="card">
+            <div className="card-title">Global Feature Importance <span className="tag" style={{marginLeft:4}}>XGBoost · all transactions</span></div>
+            {fiLoading?<div style={{display:"flex",alignItems:"center",gap:10,color:"var(--muted)"}}><div className="spinner"/>Loading...</div>
+              :globalFI?<GlobalFI data={globalFI}/>
+              :<div style={{color:"var(--muted)",fontSize:12}}>Loading feature importances...</div>}
+          </div>
+        </div>
+      )}
+
+      {/* ── HISTORY TAB ── */}
+      {tab==="history"&&(
+        <div className="fade-in">
+          <div className="grid4" style={{marginBottom:20}}>
+            {[
+              {n:history.length,l:"TOTAL ANALYZED",c:"var(--accent2)"},
+              {n:history.filter(h=>h.risk==="HIGH").length,l:"HIGH RISK",c:"var(--danger)"},
+              {n:history.filter(h=>h.risk==="MEDIUM").length,l:"MEDIUM RISK",c:"var(--warn)"},
+              {n:history.filter(h=>h.risk==="LOW").length,l:"SAFE",c:"var(--safe)"},
+            ].map((s,i)=>(
+              <div className="card stat-card" key={i}>
+                <div className="stat-num" style={{color:s.c}}>{s.n}</div>
+                <div className="stat-label">{s.l}</div>
+              </div>
+            ))}
+          </div>
+          <div className="card">
+            <div className="card-title">Analysis History</div>
+            {history.length===0
+              ?<div style={{textAlign:"center",padding:"40px",color:"var(--muted)",fontSize:12}}>No analyses yet. Run a transaction on the Analyze tab.</div>
+              :<table className="hist-table">
+                <thead><tr><th>TIME</th><th>TYPE</th><th>AMOUNT (₹)</th><th>FRAUD PROB.</th><th>RISK LEVEL</th></tr></thead>
+                <tbody>{history.map(h=>(
+                  <tr key={h.id}>
+                    <td style={{color:"var(--muted)"}}>{h.time}</td>
+                    <td>{h.type}</td>
+                    <td>{h.amount.toLocaleString()}</td>
+                    <td style={{color:h.risk==="HIGH"?"var(--danger)":h.risk==="MEDIUM"?"var(--warn)":"var(--safe)"}}>{Math.round(h.prob*100)}%</td>
+                    <td><span className={`risk-badge risk-${h.risk}`} style={{fontSize:9}}>{h.risk}</span></td>
+                  </tr>
+                ))}</tbody>
+              </table>}
+          </div>
+        </div>
+      )}
+
+      <div style={{marginTop:40,paddingTop:16,borderTop:"1px solid var(--border)",display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--muted)"}}>
+        <span>XAI FRAUD DETECTION PLUG-IN v2.0 · SHAP + LIME + COUNTERFACTUAL + BATCH</span>
+        <span>UPI FRAUD DETECTION PROJECT · 4TH YEAR MAJOR PROJECT</span>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
